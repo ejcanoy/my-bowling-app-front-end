@@ -13,7 +13,7 @@
   font-size: 24px;
   font-weight: bold;
   line-height: 34px;
-  height: 50px;
+  height: 100px;
   margin-right: -1px;
   margin-top: -1px;
   padding: 0;
@@ -48,7 +48,7 @@
   margin-top: -1px;
   padding: 0;
   text-align: center;
-  width: 34px;
+  width: 19.55px;
 }
 
 .rectangle {
@@ -63,7 +63,7 @@
   margin-top: -1px;
   padding: 0;
   text-align: center;
-  width: 67px;
+  width: 38px;
 }
 
 .board-row:after {
@@ -84,7 +84,7 @@
   margin-top: -1px;
   padding: 0;
   text-align: center;
-  width: 100px;
+  width: 57px;
 }
 
 .board-row:after {
@@ -94,7 +94,7 @@
 }
 
 .tainer {
-  align-content: flex-start;
+  align-content: center;
   display: flex;
   flex-wrap: wrap;
   height: 64px;
