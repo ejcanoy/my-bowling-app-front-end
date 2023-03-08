@@ -27,9 +27,9 @@ function App() {
       <div>
 
       </div>
-      {/* <div>
+      <div>
         <CenteredContainer/>
-      </div> */}
+      </div>
     </>
   );
 }
@@ -98,7 +98,6 @@ function ScoreBoard() {
         const g = response.data.Responses.Game_Information[0];
         setGame(g);
         setData(arr);
-        console.log(isGameOver(g));
         if (arr[g.frame - 1].throw_one !== -1 && ((g.frame !== 10) || (g.frame === 10 && arr[g.frame - 1].throw_one + arr[g.frame - 1].throwTwo < 10))) {
           setPinsLeft(pinsLeft - arr[g.frame - 1].throw_one);
         } else if (g.frame === 10 && arr[g.frame - 1].throw_one === 10 && arr[g.frame - 1].throw_two !== -1 && arr[g.frame - 1].throw_two < 10) {
@@ -143,10 +142,8 @@ function ScoreBoard() {
 
     // create object that sends game and 
     const body = {newGame, newData}
-    // console.log(body);
 
     putData(body).then(() => getData());
-    // console.log(data);
   }
 
   const putData = async (body) => {
@@ -291,7 +288,6 @@ function Rectangle({ total }) {
 }
 
 function Frame({f, throwOne, throwTwo, total}) {
-  // console.log("frame: " + f + " total: " + total);
   return (
     <>
       <div>
