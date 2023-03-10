@@ -19,6 +19,14 @@ const blank_frame = {
   throw_two: -1,
 }
 
+const putData = async (body) => {
+  try {
+    const response = await axios.put('http://localhost:8000/frames/0', { body });
+  } catch (error) {
+    console.error(error)
+  }
+
+}
 
 function App() {
   return (
@@ -37,13 +45,15 @@ function Game() {
   const [data, setData] = useState(Array(10).fill({}));
   const [game, setGame] = useState({});
   const [score, setScore] = useState(Array(10).fill(-1));
-  const [inputValue, setInputValue] = useState("");
+  const [inputValue, setInputValue] = useState(0);
   const [pinsLeft, setPinsLeft] = useState(10);
   const curFrame = { ...data[game.frame - 1] }
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [scoreType, setScoreType] = useState("Pins");
   const [radioValue, setRadioValue] = useState('1');
+  const [squares, setSquares] = useState([]);
+
 
   const radios = [
     { name: 'Pins', value: '1' },
@@ -59,6 +69,8 @@ function Game() {
         const g = response.data.Responses.Game_Information[0];
         setGame(g);
         setData(arr);
+        setSquares(arr[g.frame - 1].pins_up_one);
+        console.log(arr[g.frame - 1]);
         if (arr[g.frame - 1].throw_one !== -1 && ((g.frame !== 10) || (g.frame === 10 && arr[g.frame - 1].throw_one + arr[g.frame - 1].throwTwo < 10))) {
           setPinsLeft(pinsLeft - arr[g.frame - 1].throw_one);
         } else if (g.frame === 10 && arr[g.frame - 1].throw_one === 10 && arr[g.frame - 1].throw_two !== -1 && arr[g.frame - 1].throw_two < 10) {
@@ -76,14 +88,64 @@ function Game() {
       .finally(() => setLoading(false)); // Set loading to false once the API call is complete
   }, []);
 
+  function isGameOver(g) {
+    if (g === null) return;
+    return game['is_game_over'];
+  }
 
-function isGameOver(g) {
-    return g['is_game_over'];
-}
+  const handleSubmit = async () => {
+    if (isGameOver()) {
+      setErrorMessage("Game Is Over");
+      return;
+    }
+    const newGame = { ...game };
+    const newData = { ...data };
 
+    let throwName = "";
+    let pinsName = "";
+
+    // deals with adding value to specific throw in frame
+    if (game.throw === 1) {
+      throwName = "throw_one";
+      pinsName = "pins_up_one";
+    } else if (game.throw === 2) {
+      throwName = "throw_two";
+      pinsName = "pins_up_one";
+    } else {
+      throwName = "throw_three"
+    }
+    newData[game.frame - 1][throwName] = parseInt(inputValue);
+    newData[game.frame - 1][pinsName] = squares;
+    // create object that sends game and 
+    const body = { newGame, newData }
+    console.log(newData[0].pins_up_one);
+    // putData(body).then(() => getData());
+  }
+
+  const getData = async () => {
+    try {
+      const response = await axios.get('http://localhost:8000/game/0');
+      const arr = response.data.Responses.Frame_Information.slice();
+      arr.sort((a, b) => a.frame_number - b.frame_number);
+      const g = response.data.Responses.Game_Information[0];
+      setGame(g);
+      setData(arr);
+      if (arr[g.frame - 1].throw_one !== -1 && ((g.frame !== 10) || (g.frame === 10 && arr[g.frame - 1].throw_one + arr[g.frame - 1].throwTwo < 10))) {
+        setPinsLeft(pinsLeft - arr[g.frame - 1].throw_one);
+      } else if (g.frame === 10 && arr[g.frame - 1].throw_one === 10 && arr[g.frame - 1].throw_two !== -1 && arr[g.frame - 1].throw_two < 10) {
+        setPinsLeft(pinsLeft - arr[g.frame - 1].throw_two);
+      } else if (isGameOver(g)) {
+        setErrorMessage("Game Over");
+      } else {
+        setPinsLeft(10);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
   return (
     <>
-      <ScoreBoard data={data} game={game}/>
+      <ScoreBoard data={data} game={game} />
       <br />
       <ButtonGroup>
         {radios.map((radio, idx) => (
@@ -102,8 +164,8 @@ function isGameOver(g) {
         ))}
       </ButtonGroup>
       {radioValue === "1" ?
-      <CenteredContainer /> :
-      <Inputs />
+        <CenteredContainer data={data} setData={setData} game={game} setGame={setGame} handleSubmit={handleSubmit} inputValue={inputValue} setInputValue={setInputValue} squares={squares} setSquares={setSquares} /> :
+        <Inputs />
       }
     </>
   )
@@ -150,7 +212,7 @@ function ScoreBoard({ data, game }) {
   )
 }
 
-function Inputs({errorMessage, handleInputChange, handleSubmit, inputValue, pinsLeft}) {
+function Inputs({ errorMessage, handleInputChange, handleSubmit, inputValue, pinsLeft }) {
 
   return (
     <>
@@ -244,36 +306,51 @@ function TenthFrame({ throwOne, throwTwo, throwThree, total }) {
   );
 }
 
-function CenteredContainer({data, setData, game, setGame}) {
+function CenteredContainer({ data, setData, game, setGame, handleSubmit, inputValue, setInputValue, squares, setSquares }) {
   let header = "knock some pins down";
-  const [squares, setSquares] = useState(data[0].pins_up);
 
-  function handleSubmit(c) {
+  // function handleSubmit(c) {
+  //   let count = 0;
+  //   if (c === null) {
+  //     for (let i = 0; i < 10; i++) {
+  //       if (squares[i] === "knocked-dot") {
+  //         count++;
+  //       }
+  //     }
+  //   } else {
+  //     count = 10;
+  //     setSquares(Array(10).fill("knocked-dot"))
+  //   }
+
+  //   console.log(count + " pins knocked! " + squares)
+  // }
+
+  function calculatePins(nextSquares) {
     let count = 0;
-    if (c === null) {
-      for (let i = 0; i < 10; i++) {
-        if (squares[i] === "knocked-dot") {
-          count++;
-        }
+    for (let i = 0; i < 10; i++) {
+      if (nextSquares[i] === "knocked-dot") {
+        count++;
       }
-    } else {
-      count = 10;
-      setSquares(Array(10).fill("knocked-dot"))
     }
-    
-    console.log(count + " pins knocked! " + squares)
+    return count;
   }
 
   function handleClick(i) {
-    const nextSquares = squares.slice();
-
     // if throw is 2 and squares[i] = knocked
+    // return 
+    if (game.throw === 2 && squares[i] === "knocked-dot") {
+      return;
+    }
+    const nextSquares = squares.slice();
     if (nextSquares[i] === "dot") {
       nextSquares[i] = "knocked-dot";
     } else {
       nextSquares[i] = "dot";
     }
+    setInputValue(calculatePins(nextSquares));
     setSquares(nextSquares);
+    console.log(inputValue);
+    // console.log(squares);
   }
 
   return (
