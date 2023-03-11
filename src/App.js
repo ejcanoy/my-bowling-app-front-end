@@ -70,7 +70,6 @@ function Game() {
         setGame(g);
         setData(arr);
         setSquares(arr[g.frame - 1].pins_up_one);
-        console.log(arr[g.frame - 1]);
         if (arr[g.frame - 1].throw_one !== -1 && ((g.frame !== 10) || (g.frame === 10 && arr[g.frame - 1].throw_one + arr[g.frame - 1].throwTwo < 10))) {
           setPinsLeft(pinsLeft - arr[g.frame - 1].throw_one);
         } else if (g.frame === 10 && arr[g.frame - 1].throw_one === 10 && arr[g.frame - 1].throw_two !== -1 && arr[g.frame - 1].throw_two < 10) {
@@ -93,7 +92,7 @@ function Game() {
     return game['is_game_over'];
   }
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (c) => {
     if (isGameOver()) {
       setErrorMessage("Game Is Over");
       return;
@@ -114,12 +113,23 @@ function Game() {
     } else {
       throwName = "throw_three"
     }
-    newData[game.frame - 1][throwName] = parseInt(inputValue);
-    newData[game.frame - 1][pinsName] = squares;
+
+    if (c !== null && c === 10) {
+      console.log("here");
+      newData[game.frame - 1][throwName] = 10;
+      newData[game.frame - 1][pinsName] = ["knocked-dot", "knocked-dot", "knocked-dot", "knocked-dot", "knocked-dot", "knocked-dot", "knocked-dot", "knocked-dot", "knocked-dot", "knocked-dot"];
+
+    } else {
+      console.log("the input value: " + inputValue);
+      newData[game.frame - 1][throwName] = parseInt(inputValue);
+      newData[game.frame - 1][pinsName] = squares;
+    }
     // create object that sends game and 
     const body = { newGame, newData }
-    console.log(newData[0].pins_up_one);
-    // putData(body).then(() => getData());
+    console.log(body);
+    // console.log(newData[0].pins_up_one);
+    // console.log(newData[0]);
+    putData(body).then(() => getData());
   }
 
   const getData = async () => {
@@ -130,6 +140,7 @@ function Game() {
       const g = response.data.Responses.Game_Information[0];
       setGame(g);
       setData(arr);
+      setSquares(arr[g.frame - 1].pins_up_one)
       if (arr[g.frame - 1].throw_one !== -1 && ((g.frame !== 10) || (g.frame === 10 && arr[g.frame - 1].throw_one + arr[g.frame - 1].throwTwo < 10))) {
         setPinsLeft(pinsLeft - arr[g.frame - 1].throw_one);
       } else if (g.frame === 10 && arr[g.frame - 1].throw_one === 10 && arr[g.frame - 1].throw_two !== -1 && arr[g.frame - 1].throw_two < 10) {
@@ -164,7 +175,7 @@ function Game() {
         ))}
       </ButtonGroup>
       {radioValue === "1" ?
-        <CenteredContainer data={data} setData={setData} game={game} setGame={setGame} handleSubmit={handleSubmit} inputValue={inputValue} setInputValue={setInputValue} squares={squares} setSquares={setSquares} /> :
+        <CenteredContainer data={data} setData={setData} game={game} setGame={setGame} handleSubmit={handleSubmit} inputValue={inputValue} setInputValue={setInputValue} squares={squares} setSquares={setSquares} pinsLeft={pinsLeft} /> :
         <Inputs />
       }
     </>
@@ -306,7 +317,7 @@ function TenthFrame({ throwOne, throwTwo, throwThree, total }) {
   );
 }
 
-function CenteredContainer({ data, setData, game, setGame, handleSubmit, inputValue, setInputValue, squares, setSquares }) {
+function CenteredContainer({ data, setData, game, setGame, handleSubmit, inputValue, setInputValue, squares, setSquares, pinsLeft}) {
   let header = "knock some pins down";
 
   // function handleSubmit(c) {
@@ -332,24 +343,26 @@ function CenteredContainer({ data, setData, game, setGame, handleSubmit, inputVa
         count++;
       }
     }
-    return count;
+
+    return count - (10 - pinsLeft);
   }
 
   function handleClick(i) {
     // if throw is 2 and squares[i] = knocked
     // return 
-    if (game.throw === 2 && squares[i] === "knocked-dot") {
+    let nextSquares = [...squares];
+    if (game.throw === 2 && data[game.frame - 1].pins_up_one[i] === "knocked-dot") {
       return;
     }
-    const nextSquares = squares.slice();
+
     if (nextSquares[i] === "dot") {
       nextSquares[i] = "knocked-dot";
     } else {
       nextSquares[i] = "dot";
     }
+
     setInputValue(calculatePins(nextSquares));
     setSquares(nextSquares);
-    console.log(inputValue);
     // console.log(squares);
   }
 
