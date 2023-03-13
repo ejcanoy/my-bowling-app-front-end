@@ -47,6 +47,7 @@ function Game() {
   const [score, setScore] = useState(Array(10).fill(-1));
   const [inputValue, setInputValue] = useState(0);
   const [pinsLeft, setPinsLeft] = useState(10);
+  const [pinsDown, setPinsDown] = useState(0);
   const curFrame = { ...data[game.frame - 1] }
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -69,16 +70,25 @@ function Game() {
         const g = response.data.Responses.Game_Information[0];
         setGame(g);
         setData(arr);
-        setSquares(arr[g.frame - 1].pins_up_one);
         if (arr[g.frame - 1].throw_one !== -1 && ((g.frame !== 10) || (g.frame === 10 && arr[g.frame - 1].throw_one + arr[g.frame - 1].throwTwo < 10))) {
           setPinsLeft(pinsLeft - arr[g.frame - 1].throw_one);
+          setSquares(arr[g.frame - 1].pins_up_one)
         } else if (g.frame === 10 && arr[g.frame - 1].throw_one === 10 && arr[g.frame - 1].throw_two !== -1 && arr[g.frame - 1].throw_two < 10) {
           setPinsLeft(pinsLeft - arr[g.frame - 1].throw_two);
+          setSquares(arr[g.frame - 1].pins_up_two)
         } else if (isGameOver()) {
+          setSquares(["knocked-dot", "knocked-dot", "knocked-dot", "knocked-dot", "knocked-dot", "knocked-dot", "knocked-dot", "knocked-dot", "knocked-dot", "knocked-dot"]);
           setPinsLeft(null);
           setErrorMessage("Game Over");
         } else {
+          console.log("in else");
           setPinsLeft(10);
+          if (g.frame === 10 && g.throw === 3) {
+            console.log("in 10th")
+            setSquares(arr[g.frame - 1].pins_up_three);
+          } else {
+            setSquares(arr[g.frame - 1].pins_up_one)
+          }
         }
       })
       .catch(error => {
@@ -91,6 +101,32 @@ function Game() {
     if (g === null) return;
     return game['is_game_over'];
   }
+
+  const handleClear = async () => {
+    clearGame().then(() => getData());
+  }
+  
+  const clearGame = async () => {
+    try {
+      const response = await axios.post('http://localhost:8000/games/0');
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  const handleInputChange = (event) => {
+    if (isGameOver()) {
+      setErrorMessage(`Game Over`);
+      return;
+    }
+    const newValue = event.target.value;
+    if (newValue < 0 || newValue > pinsLeft) {
+      setErrorMessage(`Value must be between 0 and ${pinsLeft}`);
+    } else {
+      setInputValue(newValue);
+      setErrorMessage("");
+    }
+  };
 
   const handleSubmit = async (c) => {
     if (isGameOver()) {
@@ -140,15 +176,24 @@ function Game() {
       const g = response.data.Responses.Game_Information[0];
       setGame(g);
       setData(arr);
-      setSquares(arr[g.frame - 1].pins_up_one)
       if (arr[g.frame - 1].throw_one !== -1 && ((g.frame !== 10) || (g.frame === 10 && arr[g.frame - 1].throw_one + arr[g.frame - 1].throwTwo < 10))) {
         setPinsLeft(pinsLeft - arr[g.frame - 1].throw_one);
+        setSquares(arr[g.frame - 1].pins_up_one)
       } else if (g.frame === 10 && arr[g.frame - 1].throw_one === 10 && arr[g.frame - 1].throw_two !== -1 && arr[g.frame - 1].throw_two < 10) {
         setPinsLeft(pinsLeft - arr[g.frame - 1].throw_two);
+        setSquares(arr[g.frame - 1].pins_up_two)
       } else if (isGameOver(g)) {
         setErrorMessage("Game Over");
       } else {
+        console.log("in eles");
         setPinsLeft(10);
+        if (g.frame === 10 && g.throw === 3) {
+          setSquares(arr[g.frame - 1].pins_up_three);
+        } else {
+          setSquares(arr[g.frame - 1].pins_up_one)
+        }
+        console.log(arr);
+        console.log(arr[g.frame - 1].pins_up_one);
       }
     } catch (error) {
       console.error(error);
@@ -156,28 +201,31 @@ function Game() {
   }
   return (
     <>
-      <ScoreBoard data={data} game={game} />
-      <br />
-      <ButtonGroup>
-        {radios.map((radio, idx) => (
-          <ToggleButton
-            key={idx}
-            id={`radio-${idx}`}
-            type="radio"
-            variant={idx % 2 ? 'outline-success' : 'outline-danger'}
-            name="radio"
-            value={radio.value}
-            checked={radioValue === radio.value}
-            onChange={(e) => setRadioValue(e.currentTarget.value)}
-          >
-            {radio.name}
-          </ToggleButton>
-        ))}
-      </ButtonGroup>
-      {radioValue === "1" ?
-        <CenteredContainer data={data} setData={setData} game={game} setGame={setGame} handleSubmit={handleSubmit} inputValue={inputValue} setInputValue={setInputValue} squares={squares} setSquares={setSquares} pinsLeft={pinsLeft} /> :
-        <Inputs />
-      }
+      <Row className="justify-content-center">
+        <Button onClick={() => handleClear()} >Clear Game</Button>
+        <ScoreBoard data={data} game={game} />
+        <br />
+        <ButtonGroup>
+          {radios.map((radio, idx) => (
+            <ToggleButton
+              key={idx}
+              id={`radio-${idx}`}
+              type="radio"
+              variant={idx % 2 ? 'outline-success' : 'outline-danger'}
+              name="radio"
+              value={radio.value}
+              checked={radioValue === radio.value}
+              onChange={(e) => setRadioValue(e.currentTarget.value)}
+            >
+              {radio.name}
+            </ToggleButton>
+          ))}
+        </ButtonGroup>
+        {radioValue === "1" ?
+          <CenteredContainer data={data} game={game} handleSubmit={handleSubmit} setInputValue={setInputValue} squares={squares} setSquares={setSquares} pinsLeft={pinsLeft} pinsDown={pinsDown} setPinsDown={setPinsDown} /> :
+          <Inputs errorMessage={errorMessage} handleInputChange={handleInputChange} handleSubmit={handleSubmit} inputValue={inputValue} pinsLeft={pinsLeft}/>
+        }
+      </Row>
     </>
   )
 
@@ -249,7 +297,7 @@ function Square({ value, number, onSquareClick }) {
 
   return (
     <>
-      <div class="square">
+      <div className="square">
         <button
           className={value}
           onClick={onSquareClick}
@@ -317,24 +365,8 @@ function TenthFrame({ throwOne, throwTwo, throwThree, total }) {
   );
 }
 
-function CenteredContainer({ data, setData, game, setGame, handleSubmit, inputValue, setInputValue, squares, setSquares, pinsLeft}) {
+function CenteredContainer({ data, game, handleSubmit, inputValue, setInputValue, squares, setSquares, pinsLeft, pinsDown, setPinsDown}) {
   let header = "knock some pins down";
-
-  // function handleSubmit(c) {
-  //   let count = 0;
-  //   if (c === null) {
-  //     for (let i = 0; i < 10; i++) {
-  //       if (squares[i] === "knocked-dot") {
-  //         count++;
-  //       }
-  //     }
-  //   } else {
-  //     count = 10;
-  //     setSquares(Array(10).fill("knocked-dot"))
-  //   }
-
-  //   console.log(count + " pins knocked! " + squares)
-  // }
 
   function calculatePins(nextSquares) {
     let count = 0;
@@ -348,8 +380,8 @@ function CenteredContainer({ data, setData, game, setGame, handleSubmit, inputVa
   }
 
   function handleClick(i) {
-    // if throw is 2 and squares[i] = knocked
-    // return 
+    // how do we deal with 10th frame?
+
     let nextSquares = [...squares];
     if (game.throw === 2 && data[game.frame - 1].pins_up_one[i] === "knocked-dot") {
       return;
@@ -365,7 +397,6 @@ function CenteredContainer({ data, setData, game, setGame, handleSubmit, inputVa
     setSquares(nextSquares);
     // console.log(squares);
   }
-
   return (
     <Container>
       <Container className="">
