@@ -34,9 +34,6 @@ function App() {
       <div>
         <Game />
       </div>
-      {/* <div>
-        <CenteredContainer />
-      </div> */}
     </>
   );
 }
@@ -44,22 +41,12 @@ function App() {
 function Game() {
   const [data, setData] = useState(Array(10).fill({}));
   const [game, setGame] = useState({});
-  const [score, setScore] = useState(Array(10).fill(-1));
   const [inputValue, setInputValue] = useState(0);
   const [pinsLeft, setPinsLeft] = useState(10);
-  const [pinsDown, setPinsDown] = useState(0);
-  const curFrame = { ...data[game.frame - 1] }
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const [scoreType, setScoreType] = useState("Pins");
   const [radioValue, setRadioValue] = useState('1');
   const [squares, setSquares] = useState([]);
-
-
-  const radios = [
-    { name: 'Pins', value: '1' },
-    { name: 'Scores', value: '2' },
-  ];
 
   useEffect(() => {
     setLoading(true); // Set loading to true before making the API call
@@ -81,10 +68,8 @@ function Game() {
           setPinsLeft(null);
           setErrorMessage("Game Over");
         } else {
-          console.log("in else");
           setPinsLeft(10);
           if (g.frame === 10 && g.throw === 3) {
-            console.log("in 10th")
             setSquares(arr[g.frame - 1].pins_up_three);
           } else {
             setSquares(arr[g.frame - 1].pins_up_one)
@@ -134,7 +119,7 @@ function Game() {
       return;
     }
     const newGame = { ...game };
-    const newData = { ...data };
+    const newData = { ...data }; 
 
     let throwName = "";
     let pinsName = "";
@@ -151,20 +136,14 @@ function Game() {
     }
 
     if (c !== null && c === 10) {
-      console.log("here");
       newData[game.frame - 1][throwName] = 10;
       newData[game.frame - 1][pinsName] = ["knocked-dot", "knocked-dot", "knocked-dot", "knocked-dot", "knocked-dot", "knocked-dot", "knocked-dot", "knocked-dot", "knocked-dot", "knocked-dot"];
-
     } else {
-      console.log("the input value: " + inputValue);
       newData[game.frame - 1][throwName] = parseInt(inputValue);
       newData[game.frame - 1][pinsName] = squares;
     }
     // create object that sends game and 
     const body = { newGame, newData }
-    console.log(body);
-    // console.log(newData[0].pins_up_one);
-    // console.log(newData[0]);
     putData(body).then(() => getData());
   }
 
@@ -176,6 +155,7 @@ function Game() {
       const g = response.data.Responses.Game_Information[0];
       setGame(g);
       setData(arr);
+      setInputValue(0);
       if (arr[g.frame - 1].throw_one !== -1 && ((g.frame !== 10) || (g.frame === 10 && arr[g.frame - 1].throw_one + arr[g.frame - 1].throwTwo < 10))) {
         setPinsLeft(pinsLeft - arr[g.frame - 1].throw_one);
         setSquares(arr[g.frame - 1].pins_up_one)
@@ -185,46 +165,36 @@ function Game() {
       } else if (isGameOver(g)) {
         setErrorMessage("Game Over");
       } else {
-        console.log("in eles");
         setPinsLeft(10);
+        console.log("frame " + g.frame + " throw " + g.throw);
         if (g.frame === 10 && g.throw === 3) {
           setSquares(arr[g.frame - 1].pins_up_three);
         } else {
-          setSquares(arr[g.frame - 1].pins_up_one)
+          console.log("here");
+          setSquares(arr[g.frame - 1].pins_up_two)
         }
-        console.log(arr);
-        console.log(arr[g.frame - 1].pins_up_one);
       }
     } catch (error) {
       console.error(error);
     }
   }
+  console.log(isGameOver());
   return (
     <>
       <Row className="justify-content-center">
         <Button onClick={() => handleClear()} >Clear Game</Button>
         <ScoreBoard data={data} game={game} />
         <br />
-        <ButtonGroup>
-          {radios.map((radio, idx) => (
-            <ToggleButton
-              key={idx}
-              id={`radio-${idx}`}
-              type="radio"
-              variant={idx % 2 ? 'outline-success' : 'outline-danger'}
-              name="radio"
-              value={radio.value}
-              checked={radioValue === radio.value}
-              onChange={(e) => setRadioValue(e.currentTarget.value)}
-            >
-              {radio.name}
-            </ToggleButton>
-          ))}
-        </ButtonGroup>
-        {radioValue === "1" ?
-          <CenteredContainer data={data} game={game} handleSubmit={handleSubmit} setInputValue={setInputValue} squares={squares} setSquares={setSquares} pinsLeft={pinsLeft} pinsDown={pinsDown} setPinsDown={setPinsDown} /> :
-          <Inputs errorMessage={errorMessage} handleInputChange={handleInputChange} handleSubmit={handleSubmit} inputValue={inputValue} pinsLeft={pinsLeft}/>
-        }
+        
+        {isGameOver() ? 
+        <Row className="justify-content-md-center">
+        <Col md="auto">
+          <br />
+          <br />
+          <h4 style={{color : 'red'}}>Game Over</h4> 
+        </Col>
+        </Row> : 
+        <Rack data={data} game={game} handleSubmit={handleSubmit} setInputValue={setInputValue} squares={squares} setSquares={setSquares} pinsLeft={pinsLeft}/>}
       </Row>
     </>
   )
@@ -357,7 +327,7 @@ function TenthFrame({ throwOne, throwTwo, throwThree, total }) {
         <div className="board-row">
           <Box value={throwOne} />
           <Box value={(throwOne !== 10 && throwOne + throwTwo === 10) ? 10 : throwTwo} isSecondThrow={(throwOne !== 10 && throwOne + throwTwo === 10) ? "True" : "False"} />
-          <Box value={(throwTwo !== 10 && throwTwo + throwThree === 10) ? 10 : throwThree} isSecondThrow={(throwOne + throwTwo === 10) ? "False" : "True"} />
+          <Box value={(throwTwo !== 10 && throwTwo + throwThree === 10) ? 10 : throwThree} isSecondThrow={(throwOne + throwTwo >= 10) ? "False" : "True"} />
         </div>
         <button className="tenth-rectangle">{total}</button>
       </div>
@@ -365,7 +335,7 @@ function TenthFrame({ throwOne, throwTwo, throwThree, total }) {
   );
 }
 
-function CenteredContainer({ data, game, handleSubmit, inputValue, setInputValue, squares, setSquares, pinsLeft, pinsDown, setPinsDown}) {
+function Rack({ data, game, handleSubmit, inputValue, setInputValue, squares, setSquares, pinsLeft}) {
   let header = "knock some pins down";
 
   function calculatePins(nextSquares) {
@@ -375,7 +345,6 @@ function CenteredContainer({ data, game, handleSubmit, inputValue, setInputValue
         count++;
       }
     }
-
     return count - (10 - pinsLeft);
   }
 
@@ -395,7 +364,6 @@ function CenteredContainer({ data, game, handleSubmit, inputValue, setInputValue
 
     setInputValue(calculatePins(nextSquares));
     setSquares(nextSquares);
-    // console.log(squares);
   }
   return (
     <Container>
@@ -428,7 +396,7 @@ function CenteredContainer({ data, game, handleSubmit, inputValue, setInputValue
       </Container>
       <Row className="justify-content-center">
         <Col md="auto" xs={3}>
-          <Button variant="dark" onClick={() => handleSubmit(10)}>Strike</Button>
+          <Button variant="dark" onClick={() => handleSubmit(10)}>{pinsLeft}</Button>
         </Col>
         <Col md="auto" xs={3}>
           <Button variant="dark" onClick={() => handleSubmit()}>Next</Button>
@@ -551,226 +519,5 @@ const game = {
   "Count": 10,
   "ScannedCount": 10
 };
-
-/*
-function ScoreBoard() {
-  const [data, setData] = useState(Array(10).fill({}));
-  const [game, setGame] = useState({});
-  const [score, setScore] = useState(Array(10).fill(-1));
-  const [inputValue, setInputValue] = useState("");
-  const [pinsLeft, setPinsLeft] = useState(10);
-  const curFrame = { ...data[game.frame - 1] }
-  const [errorMessage, setErrorMessage] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [scoreType, setScoreType] = useState("Pins");
-  const [radioValue, setRadioValue] = useState('1');
-
-  const radios = [
-    { name: 'Pins', value: '1' },
-    { name: 'Scores', value: '2' },
-  ];
-
-
-  // useEffect(() => {
-  //   axios.get('http://localhost:8000/game/0')
-  //     .then(response => {
-  //       // console.log(response.data.Responses);
-  //       const arr = response.data.Responses.Frame_Information.slice();
-  //       arr.sort((a, b) => a.frame_number - b.frame_number);
-  //       // console.log(arr);
-  //       const g = response.data.Responses.Game_Information[0];
-  //       setGame(g);
-  //       setData(arr);
-  //       if (arr[g.frame - 1].throw_one !== -1) {
-  //         setPinsLeft(pinsLeft - arr[g.frame - 1].throw_one);
-  //       }
-  //     })
-  //     .catch(error => {
-  //       console.log(error);
-  //     });
-  // }, [data]);
-
-  // useEffect(() => {
-  //   async function fetchData() {
-  //     try {
-  //       setLoading(true);
-  //       const response = await axios.get('http://localhost:8000/game/0');
-  //       console.log(response.data.Responses.Frame_Information.slice());
-  //       const arr = response.data.Responses.Frame_Information.slice()
-  //       arr.sort((a, b) => a.frame_number - b.frame_number);
-  //       const g = response.data.Responses.Game_Information[0];
-  //       setGame(g);
-  //       setData(arr);
-  //       if (arr[g.frame - 1].throw_one !== -1) {
-  //         setPinsLeft(pinsLeft - arr[g.frame - 1].throw_one);
-  //       }
-  //     } catch(error) {
-  //       console.error(error);
-  //       setErrorMessage("Error fetching data");
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   }
-
-  //   fetchData();
-  // }, [data]);
-
-  useEffect(() => {
-    setLoading(true); // Set loading to true before making the API call
-    axios.get('http://localhost:8000/game/0')
-      .then(response => {
-        const arr = response.data.Responses.Frame_Information.slice();
-        arr.sort((a, b) => a.frame_number - b.frame_number);
-        const g = response.data.Responses.Game_Information[0];
-        setGame(g);
-        setData(arr);
-        if (arr[g.frame - 1].throw_one !== -1 && ((g.frame !== 10) || (g.frame === 10 && arr[g.frame - 1].throw_one + arr[g.frame - 1].throwTwo < 10))) {
-          setPinsLeft(pinsLeft - arr[g.frame - 1].throw_one);
-        } else if (g.frame === 10 && arr[g.frame - 1].throw_one === 10 && arr[g.frame - 1].throw_two !== -1 && arr[g.frame - 1].throw_two < 10) {
-          setPinsLeft(pinsLeft - arr[g.frame - 1].throw_two);
-        } else if (isGameOver()) {
-          setPinsLeft(null);
-          setErrorMessage("Game Over");
-        } else {
-          setPinsLeft(10);
-        }
-      })
-      .catch(error => {
-        console.log(error);
-      })
-      .finally(() => setLoading(false)); // Set loading to false once the API call is complete
-  }, []);
-
-
-  function isGameOver(g) {
-    return g['is_game_over'];
-  }
-
-  const handleSubmit = async () => {
-    if (isGameOver()) {
-      setErrorMessage("Game Is Over");
-      return;
-    }
-    const newGame = { ...game };
-    const newData = { ...data };
-
-    let throwName = "";
-
-    // deals with adding value to specific throw in frame
-    if (game.throw === 1) {
-      throwName = "throw_one";
-    } else if (game.throw === 2) {
-      throwName = "throw_two";
-    } else {
-      throwName = "throw_three"
-    }
-    newData[game.frame - 1][throwName] = parseInt(inputValue);
-
-    // create object that sends game and 
-    const body = { newGame, newData }
-
-    putData(body).then(() => getData());
-  }
-
-  const putData = async (body) => {
-    try {
-      const response = await axios.put('http://localhost:8000/frames/0', { body });
-    } catch (error) {
-      console.error(error)
-    }
-
-  }
-
-  const getData = async () => {
-    try {
-      const response = await axios.get('http://localhost:8000/game/0');
-      const arr = response.data.Responses.Frame_Information.slice();
-      arr.sort((a, b) => a.frame_number - b.frame_number);
-      const g = response.data.Responses.Game_Information[0];
-      setGame(g);
-      setData(arr);
-      if (arr[g.frame - 1].throw_one !== -1 && ((g.frame !== 10) || (g.frame === 10 && arr[g.frame - 1].throw_one + arr[g.frame - 1].throwTwo < 10))) {
-        setPinsLeft(pinsLeft - arr[g.frame - 1].throw_one);
-      } else if (g.frame === 10 && arr[g.frame - 1].throw_one === 10 && arr[g.frame - 1].throw_two !== -1 && arr[g.frame - 1].throw_two < 10) {
-        setPinsLeft(pinsLeft - arr[g.frame - 1].throw_two);
-      } else if (isGameOver(g)) {
-        setErrorMessage("Game Over");
-      } else {
-        setPinsLeft(10);
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
-  const handleInputChange = (event) => {
-    if (isGameOver()) {
-      setErrorMessage(`Game Over`);
-      return;
-    }
-    const newValue = event.target.value;
-    if (newValue < 0 || newValue > pinsLeft) {
-      setErrorMessage(`Value must be between 0 and ${pinsLeft}`);
-    } else {
-      setInputValue(newValue);
-      setErrorMessage("");
-    }
-  };
-
-  const frameTotal = (frame) => {
-    let total = 0;
-    for (let i = 0; i <= frame; i++) {
-      if (data[i].throw_one !== -1) {
-        total += data[i].throw_one;
-      }
-      if (data[i].throw_two !== -1) {
-        total += data[i].throw_two;
-      }
-      total += data[i].bonus_pins;
-    }
-    if (frame === 9 && data[9].throw_three !== -1) {
-      total += data[9].throw_three;
-    }
-    return total;
-  }
-  return (
-    <>
-      <div>
-        <h3> Frame {game.frame} </h3>
-        <h3> Throw {game.throw} </h3>
-      </div>
-      <div className="tainer">
-        <Frame  throwOne={data[0].throw_one} throwTwo={data[0].throw_two} total={game.frame >= 1 && data[0].throw_one !== -1 ? frameTotal(0) : null} />
-        <Frame  throwOne={data[1].throw_one} throwTwo={data[1].throw_two} total={game.frame >= 2 && data[1].throw_one !== -1 ? frameTotal(1) : null} />
-        <Frame  throwOne={data[2].throw_one} throwTwo={data[2].throw_two} total={game.frame >= 3 && data[2].throw_one !== -1 ? frameTotal(2) : null} />
-        <Frame  throwOne={data[3].throw_one} throwTwo={data[3].throw_two} total={game.frame >= 4 && data[3].throw_one !== -1 ? frameTotal(3) : null} />
-        <Frame  throwOne={data[4].throw_one} throwTwo={data[4].throw_two} total={game.frame >= 5 && data[4].throw_one !== -1 ? frameTotal(4) : null} />
-        <Frame  throwOne={data[5].throw_one} throwTwo={data[5].throw_two} total={game.frame >= 6 && data[5].throw_one !== -1 ? frameTotal(5) : null} />
-        <Frame  throwOne={data[6].throw_one} throwTwo={data[6].throw_two} total={game.frame >= 7 && data[6].throw_one !== -1 ? frameTotal(6) : null} />
-        <Frame  throwOne={data[7].throw_one} throwTwo={data[7].throw_two} total={game.frame >= 8 && data[7].throw_one !== -1 ? frameTotal(7) : null} />
-        <Frame  throwOne={data[8].throw_one} throwTwo={data[8].throw_two} total={game.frame >= 9 && data[8].throw_one !== -1 ? frameTotal(8) : null} />
-        <TenthFrame throwOne={data[9].throw_one} throwTwo={data[9].throw_two} throwThree={data[9].throw_three} total={game.frame >= 10 && data[9].throw_one !== -1 ? frameTotal(9) : null} />
-      </div>
-      <br />
-      <ButtonGroup>
-        {radios.map((radio, idx) => (
-          <ToggleButton
-            key={idx}
-            id={`radio-${idx}`}
-            type="radio"
-            variant={idx % 2 ? 'outline-success' : 'outline-danger'}
-            name="radio"
-            value={radio.value}
-            checked={radioValue === radio.value}
-            onChange={(e) => setRadioValue(e.currentTarget.value)}
-          >
-            {radio.name}
-          </ToggleButton>
-        ))}
-      </ButtonGroup>
-    </>
-  )
-}
-*/
 
 export default App;
