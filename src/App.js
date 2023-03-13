@@ -166,11 +166,9 @@ function Game() {
         setErrorMessage("Game Over");
       } else {
         setPinsLeft(10);
-        console.log("frame " + g.frame + " throw " + g.throw);
         if (g.frame === 10 && g.throw === 3) {
           setSquares(arr[g.frame - 1].pins_up_three);
         } else {
-          console.log("here");
           setSquares(arr[g.frame - 1].pins_up_two)
         }
       }
@@ -178,7 +176,6 @@ function Game() {
       console.error(error);
     }
   }
-  console.log(isGameOver());
   return (
     <>
       <Row className="justify-content-center">
@@ -236,24 +233,6 @@ function ScoreBoard({ data, game }) {
         <Frame throwOne={data[7].throw_one} throwTwo={data[7].throw_two} total={game.frame >= 8 && data[7].throw_one !== -1 ? frameTotal(7) : null} />
         <Frame throwOne={data[8].throw_one} throwTwo={data[8].throw_two} total={game.frame >= 9 && data[8].throw_one !== -1 ? frameTotal(8) : null} />
         <TenthFrame throwOne={data[9].throw_one} throwTwo={data[9].throw_two} throwThree={data[9].throw_three} total={game.frame >= 10 && data[9].throw_one !== -1 ? frameTotal(9) : null} />
-      </div>
-    </>
-  )
-}
-
-function Inputs({ errorMessage, handleInputChange, handleSubmit, inputValue, pinsLeft }) {
-
-  return (
-    <>
-      <div classname="container">
-        <div>
-          <h4>{errorMessage === "Game Over" ? null : `${pinsLeft} pins left`}</h4>
-          {errorMessage && (
-            <div style={{ color: "red" }}>{errorMessage}</div>
-          )}
-          <input type="number" min="0" max="10" value={inputValue} onChange={handleInputChange} />
-          <button onClick={handleSubmit}>Submit</button>
-        </div>
       </div>
     </>
   )
@@ -395,10 +374,10 @@ function Rack({ data, game, handleSubmit, inputValue, setInputValue, squares, se
         </Row>
       </Container>
       <Row className="justify-content-center">
-        <Col md="auto" xs={3}>
+        <Col md="auto" xs={4}>
           <Button variant="dark" onClick={() => handleSubmit(10)}>{pinsLeft}</Button>
         </Col>
-        <Col md="auto" xs={3}>
+        <Col md="auto" xs={4}>
           <Button variant="dark" onClick={() => handleSubmit()}>Next</Button>
         </Col>
       </Row>
