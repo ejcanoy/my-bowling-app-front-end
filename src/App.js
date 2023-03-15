@@ -3,9 +3,9 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import React from 'react';
 import Home from './pages/Home.js';
 import Leagues from './pages/League.js';
-import Games, { gamesLoader } from './pages/Games';
-import Frames, { framesLoader } from './pages/Frames';
-import Sets from './pages/Sets';
+import Games from './pages/Games';
+import Frames from './pages/Frames';
+import Sets, { setsLoader } from './pages/Sets';
 import RootLayout from './layouts/RootLayout';
 import { createBrowserRouter, createRoutesFromElements, RouterProvider, Route, NavLink, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react'
@@ -26,10 +26,13 @@ const router = createBrowserRouter(
       <Route path="leagues" >
         <Route index element={<Leagues />} />
         <Route path="sets">
-          <Route index element={<Sets />} />
-          <Route path="games">
-            <Route index element={<Games />} loader={gamesLoader} />
-            <Route path=":id" element={<Frames />} loader={framesLoader} />
+          <Route index element={<Sets />}/>
+          <Route path=":setId" >
+            <Route index element={<Games />}/>
+            <Route path="games">
+            <Route index element={<Games />}/>
+            <Route path=":id" element={<Frames />}/>
+          </Route>
           </Route>
         </Route>
       </Route>

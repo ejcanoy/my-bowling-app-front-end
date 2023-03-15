@@ -10,23 +10,15 @@ import Button from 'react-bootstrap/Button';
 import { useState, useEffect } from 'react'
 
 const Frames = () => {
-    const games = useLoaderData();
     const { id } = useParams(); 
+    // console.log(id);
     return (
         <>
+            
             <Game id={id}/>
         </>
     );
 }
-
-export const framesLoader = async ({ params }) => {
-    const { id } = params;
-    // const res = await axios.get('http://localhost:8000/frames/' + id);
-    // console.log("in function " + JSON.stringify(res.data.Items));
-    // const arr = JSON.parse(res.data).Items.slice();
-    // arr.sort((a, b) => a.frame_number - b.frame_number);
-    return {};
-};
 
 function Game({id}) {
     const [data, setData] = useState(Array(10).fill({}));
@@ -38,11 +30,13 @@ function Game({id}) {
     const [radioValue, setRadioValue] = useState('1');
     const [squares, setSquares] = useState([]);
   
+    console.log(id);
     useEffect(() => {
       setLoading(true); // Set loading to true before making the API call
       axios.get('http://localhost:8000/games/' + id)
         .then(response => {
           const arr = response.data.Responses.Frame_Information.slice();
+          console.log(arr);
           arr.sort((a, b) => a.frame_number - b.frame_number);
           const g = response.data.Responses.Game_Information[0];
           setGame(g);
@@ -83,7 +77,7 @@ function Game({id}) {
   
     const putData = async (body) => {
       try {
-        const response = await axios.put('http://localhost:8000/frames/0', { body });
+        const response = await axios.put('http://localhost:8000/frames/' + id, { body });
       } catch (error) {
         console.error(error)
       }
@@ -92,7 +86,7 @@ function Game({id}) {
   
     const clearGame = async () => {
       try {
-        const response = await axios.post('http://localhost:8000/games/0');
+        const response = await axios.post('http://localhost:8000/games/' + id);
       } catch (error) {
         console.error(error);
       }
@@ -148,7 +142,7 @@ function Game({id}) {
   
     const getData = async () => {
       try {
-        const response = await axios.get('http://localhost:8000/games/0');
+        const response = await axios.get('http://localhost:8000/games/' + id);
         const arr = response.data.Responses.Frame_Information.slice();
         arr.sort((a, b) => a.frame_number - b.frame_number);
         const g = response.data.Responses.Game_Information[0];
