@@ -5,8 +5,8 @@ import { Link, Outlet } from 'react-router-dom';
 const Leagues = () => {
     return (
         <>
-        <Link to="games" class="link-button">Games</Link>
-        <h1>Leagues</h1>
+            <h1>Leagues</h1>
+            <Link to="sets" class="link-button">Sets</Link>
         </>
     );
 }

@@ -11,25 +11,24 @@ import { useState, useEffect } from 'react'
 
 const Frames = () => {
     const games = useLoaderData();
-    console.log(games);
+    const { id } = useParams(); 
     return (
         <>
-            <Game />
+            <Game id={id}/>
         </>
     );
 }
 
 export const framesLoader = async ({ params }) => {
     const { id } = params;
-    const res = await axios.get('http://localhost:8000/frames/' + id);
-    console.log(res);
-    console.log("in function " + JSON.stringify(res.data.Items));
+    // const res = await axios.get('http://localhost:8000/frames/' + id);
+    // console.log("in function " + JSON.stringify(res.data.Items));
     // const arr = JSON.parse(res.data).Items.slice();
     // arr.sort((a, b) => a.frame_number - b.frame_number);
     return {};
 };
 
-function Game() {
+function Game({id}) {
     const [data, setData] = useState(Array(10).fill({}));
     const [game, setGame] = useState({});
     const [inputValue, setInputValue] = useState(0);
@@ -41,7 +40,7 @@ function Game() {
   
     useEffect(() => {
       setLoading(true); // Set loading to true before making the API call
-      axios.get('http://localhost:8000/games/0')
+      axios.get('http://localhost:8000/games/' + id)
         .then(response => {
           const arr = response.data.Responses.Frame_Information.slice();
           arr.sort((a, b) => a.frame_number - b.frame_number);

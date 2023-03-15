@@ -9,7 +9,9 @@ const Games = () => {
         <>
         <h1>Games</h1>
             {games.map((games, count) => ( 
+                <div>
                     <Link to={(games.game_id).toString()} className="link-button" key={games.game_id}>{"Game " + (count + 1)}</Link>
+                </div>
             ))}
         </>
     );

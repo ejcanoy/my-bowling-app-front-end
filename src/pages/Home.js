@@ -4,8 +4,8 @@ import { Link } from 'react-router-dom';
 const Home = () => {
     return (
         <>
-        <Link to="/leagues" class="link-button">Leagues</Link>
-        <h1>HOME</h1>
+            <h1>HOME</h1>
+            <Link to="/leagues" class="link-button">Leagues</Link>
         </>
     );
 }
