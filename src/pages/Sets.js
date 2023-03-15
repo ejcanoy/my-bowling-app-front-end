@@ -31,8 +31,8 @@ function Set() {
     async function fetchData() {
         const res = await axios.get('http://localhost:8000/set');
         const arr = JSON.parse(res.data).Items.slice();
-        console.log(arr)
         arr.sort((a, b) => a.set_id - b.set_id);
+        console.log(arr)
         setSets(arr);
       }
       console.log(typeof(sets))
